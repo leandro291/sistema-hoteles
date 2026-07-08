@@ -22,8 +22,10 @@ class AsignacionView:
         self.capacidad_actual_seleccionada = 0
         
         self.configurar_interfaz()
-        self.cargar_combobox_clientes()
-        self.cargar_combobox_habitaciones()
+        self.cargar_clientes()
+        self.cargar_habitaciones()
+
+    # ─── CONSTRUCCIÓN DE INTERFAZ ───────────────────────
 
     def configurar_interfaz(self):
 
@@ -64,7 +66,7 @@ class AsignacionView:
         self.lista_habitaciones = ttk.Combobox(self.panel_izquierda, font=("Arial", 16), state="readonly", width=25)
         self.lista_habitaciones.pack(padx=15, pady=(0, 5))
         
-        self.lista_habitaciones.bind("<<ComboboxSelected>>", self.actualizar_capacidad_visual)
+        self.lista_habitaciones.bind("<<ComboboxSelected>>", self.actualizar_capacidad)
 
         self.capacidad = tk.Label(
             self.panel_izquierda, text="Capacidad: Seleccione un cuarto", 
@@ -82,7 +84,7 @@ class AsignacionView:
 
         self.btn_guardar = tk.Button(
             self.panel_izquierda, text="Confirmar y Guardar", font=("Arial", 18, "bold"), 
-            bg="#21DF96", fg="white", bd=2, relief="raised", command=self.ejecutar_transaccion
+            bg="#21DF96", fg="white", bd=2, relief="raised", command=self.ejecutar_check_in
         )
         self.btn_guardar.pack(fill="x", side=tk.BOTTOM, padx=15, pady=15, ipady=5)
 
@@ -115,7 +117,7 @@ class AsignacionView:
 
         self.btn_agregar = tk.Button(
             self.frame_form_acomp, text="Añadir a la Lista", font=("Arial", 12, "bold"), 
-            bg="#1565C0", fg="white", command=self.agregar_acompanante_lista
+            bg="#1565C0", fg="white", command=self.agregar_acompanante
         )
         self.btn_agregar.grid(row=1, column=4, padx=15, pady=(0,15), sticky="we")
 
@@ -135,13 +137,13 @@ class AsignacionView:
 
         self.btn_quitar = tk.Button(
             self.panel_derecha, text="Eliminar Seleccionado", font=("Arial", 14, "bold"), 
-            bg="#D32F2F", fg="white", command=self.quitar_acompanante_lista
+            bg="#D32F2F", fg="white", command=self.quitar_acompanante
         )
         self.btn_quitar.pack(side=tk.RIGHT, padx=15, pady=15)
 
-    # Logica de control y eventos
+    # ─── CARGA DE DATOS ─────────────────────────────────
 
-    def cargar_combobox_clientes(self):
+    def cargar_clientes(self):
         
         self.ids_clientes_memoria.clear()
         
@@ -161,7 +163,7 @@ class AsignacionView:
         self.lista_clientes['values'] = visual
         self.lista_clientes.current(0)
 
-    def cargar_combobox_habitaciones(self):
+    def cargar_habitaciones(self):
         
         self.datos_habitaciones.clear()
 
@@ -181,9 +183,9 @@ class AsignacionView:
         self.lista_habitaciones['values'] = visual
         self.lista_habitaciones.current(0)
         
-        self.actualizar_capacidad_visual(None)
+        self.actualizar_capacidad(None)
 
-    def actualizar_capacidad_visual(self, event):
+    def actualizar_capacidad(self, event):
         idx = self.lista_habitaciones.current()
         if idx == -1 or not self.datos_habitaciones:
             return
@@ -194,7 +196,9 @@ class AsignacionView:
         texto = f"Capacidad Total: {self.capacidad_actual_seleccionada} personas"
         self.capacidad.config(text=texto, bg="#D4EDDA", fg="#155724")
 
-    def agregar_acompanante_lista(self):
+    # ─── CHECK-IN ───────────────────────────────────────
+
+    def agregar_acompanante(self):
 
         if not self.datos_habitaciones or self.capacidad_actual_seleccionada == 0:
             messagebox.showwarning("Aviso", "Seleccione una habitacion disponible antes de añadir acompañantes.")
@@ -234,7 +238,7 @@ class AsignacionView:
         self.acompanante_num_doc.delete(0, tk.END)
         self.acompanante_telefono.delete(0, tk.END)
 
-    def quitar_acompanante_lista(self):
+    def quitar_acompanante(self):
         seleccionado = self.tabla_acompanantes.selection()
 
         if not seleccionado: 
@@ -244,7 +248,7 @@ class AsignacionView:
         self.lista_acompanantes_memoria.pop(self.tabla_acompanantes.index(item_id))
         self.tabla_acompanantes.delete(item_id)
 
-    def ejecutar_transaccion(self):
+    def ejecutar_check_in(self):
         id_cliente = self.lista_clientes.current()
         
         id_habitacion = self.lista_habitaciones.current()
@@ -286,13 +290,13 @@ class AsignacionView:
             )
 
             messagebox.showinfo("Éxito", "Check-In exitoso.")
-            self.limpiar_formulario()
+            self.limpiar()
         except ValueError as e:
             messagebox.showerror("Datos Invalidos", str(e))
         except Exception as e:
             messagebox.showerror(f"Error Crítico de BD", str(e))
 
-    def limpiar_formulario(self):
+    def limpiar(self):
         
         hoy = date.today()
         self.ingreso.set_date(hoy)
@@ -303,5 +307,5 @@ class AsignacionView:
         for item in self.tabla_acompanantes.get_children(): 
             self.tabla_acompanantes.delete(item)
 
-        self.cargar_combobox_habitaciones()
-        self.cargar_combobox_clientes()
+        self.cargar_habitaciones()
+        self.cargar_clientes()

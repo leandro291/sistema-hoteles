@@ -14,7 +14,9 @@ class DashboardView:
 
         self.configurar_interfaz()
         self.actualizar_reporte_dashboard()
-    
+
+    # ─── CONSTRUCCIÓN DE INTERFAZ ───────────────────────
+
     def configurar_interfaz(self):
 
         # Contenedor Superior del sistema
@@ -36,7 +38,7 @@ class DashboardView:
         self.frame_footer.pack(side=tk.TOP, fill="both", expand=True)
 
         self.registros_base_de_datos()
-    
+
     def menu_opciones(self):
 
         self.contenedor_botones = tk.Frame(self.frame_main, background="#F3DCAB")
@@ -90,7 +92,32 @@ class DashboardView:
         self.logo_imagen = ImageTk.PhotoImage(imagen_redimensionada)
 
         tk.Label(self.vista_imagen, image=self.logo_imagen).pack()
-        
+
+    # ─── ACTUALIZACIÓN DE DATOS ─────────────────────────
+
+    def actualizar_reporte_dashboard(self):
+        try:
+            controller_hab = HabitacionController()
+            controller_client = ClienteController()
+
+            total_hab = controller_hab.contar_hab_totales()
+            hab_disp = controller_hab.contar_hab_disponibles()
+            hab_ocup = controller_hab.contar_hab_ocupadas()
+            total_cli = controller_client.contar_total_clientes()
+
+            self.total_habitaciones.config(text=str(total_hab))
+            self.habitaciones_disponibles.config(text=str(hab_disp))
+            self.habitaciones_ocupadas.config(text=str(hab_ocup))
+            self.total_clientes.config(text=str(total_cli))
+
+        except Exception as e:
+            messagebox.showerror("Error de Carga", f"No se pudo actualizar el reporte:\n{e}")
+
+    def cerrar_sesion(self):
+        limpiar_ventana(self.root)
+
+    # ─── MÉTODOS AUXILIARES ─────────────────────────────
+
     def crear_tarjetas_datos(self, titulo, valor_inicial):
         tarjeta = tk.Frame(self.contenedor_tarjetas, background="white", width=150, height=180)
         tarjeta.pack(side=tk.LEFT, padx=10)
@@ -108,7 +135,7 @@ class DashboardView:
         label_numero.pack(expand=True, fill="both")
 
         return label_numero
-    
+
     def cargar_icono(self, nombre_archivo):
 
         carpeta_vistas = os.path.dirname(__file__)
@@ -132,26 +159,3 @@ class DashboardView:
         boton.pack(side=tk.LEFT, pady=10, padx=15)
 
         return boton
-
-    def actualizar_reporte_dashboard(self):
-        try:
-            controller_hab = HabitacionController()
-            controller_client = ClienteController()
-
-            total_hab = controller_hab.contar_hab_totales()
-            hab_disp = controller_hab.contar_hab_disponibles()
-            hab_ocup = controller_hab.contar_hab_ocupadas()
-            total_cli = controller_client.contar_total_clientes()
-
-            self.total_habitaciones.config(text=str(total_hab))
-            self.habitaciones_disponibles.config(text=str(hab_disp))
-            self.habitaciones_ocupadas.config(text=str(hab_ocup))
-            self.total_clientes.config(text=str(total_cli))
-
-        except Exception as e:
-            messagebox.showerror("Error de Carga", f"No se pudo actualizar el reporte:\n{e}")
-
-    def cerrar_sesion(self):
-        limpiar_ventana(self.root)
-
-        

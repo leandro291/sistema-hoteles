@@ -14,11 +14,12 @@ class PagoView:
 
         self.configurar_interfaz()
         
-        # Disparador automático activado: Llena la tabla al instante de abrir la vista
-        self.cargar_datos_pagos()
+        self.cargar_pagos()
+
+    # ─── CONSTRUCCIÓN DE INTERFAZ ───────────────────────
 
     def configurar_interfaz(self):
-        # --- HEADER ---
+        # Header
         self.frame_header = tk.Frame(self.root, background="#E0E0E0", bd=2, relief="groove")
         self.frame_header.pack(side=tk.TOP, fill="x")
 
@@ -34,11 +35,11 @@ class PagoView:
             font=("Arial", 28, "bold"), fg="#333333"
         ).pack(side=tk.LEFT, padx=20, pady=15)
 
-        # --- CONTENEDOR PRINCIPAL ---
+        # Contenedor principal
         self.frame_main = tk.Frame(self.root, background="#F3DCAB")
         self.frame_main.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # PANEL CENTRAL: TABLA DE HISTORIAL 
+        # Panel central
         self.panel_tabla = tk.LabelFrame(
             self.frame_main, text=" Historial General de Pagos ", font=("Arial", 20, "bold"), 
             background="#F3DCAB", fg="#00838F", bd=2, relief="solid"
@@ -78,7 +79,7 @@ class PagoView:
             
         self.tabla_pagos.column("Reserva / Cliente", anchor="w")
 
-        # PANEL INFERIOR: ACCIONES DE FACTURACIÓN
+        # Panel inferior
         self.frame_acciones = tk.Frame(self.frame_main, bg="#F3DCAB")
         self.frame_acciones.pack(fill="x", pady=(10, 0))
 
@@ -90,10 +91,9 @@ class PagoView:
         )
         self.btn_nuevo_cobro.pack(side=tk.RIGHT, padx=15)
 
+    # ─── CARGA DE DATOS ─────────────────────────────────
 
-    #Metodos de logica y conexion
-
-    def cargar_datos_pagos(self):
+    def cargar_pagos(self):
         for item in self.tabla_pagos.get_children():
             self.tabla_pagos.delete(item)
 
@@ -120,6 +120,8 @@ class PagoView:
         except Exception as e:
             messagebox.showerror("Error de BD", f"Error cargando historial:\n{e}")
 
+    # ─── MODAL DE COBRO ─────────────────────────────────
+
     def abrir_modal_cobro(self):
         self.modal = tk.Toplevel(self.root)
         self.modal.title("Liquidación y Cobro de Habitación")
@@ -131,21 +133,16 @@ class PagoView:
 
         tk.Label(self.modal, text="Liquidar Habitación", font=("Arial", 26, "bold"), bg="#F3DCAB", fg="#00838F").pack(pady=(20, 10))
 
-        # =========================================================
-        # ZONA 1: SELECCIÓN DE RESERVA
-        # =========================================================
         frame_seleccion = tk.LabelFrame(self.modal, text=" 1. Seleccione Cliente ", font=("Arial", 14, "bold"), bg="#F3DCAB", fg="#333333")
         frame_seleccion.pack(fill="x", padx=20, pady=10, ipadx=5, ipady=5)
 
         self.combo_reservas_pago = ttk.Combobox(frame_seleccion, font=("Arial", 14), state="readonly", width=35)
         self.combo_reservas_pago.pack(pady=10)
-        self.combo_reservas_pago.bind("<<ComboboxSelected>>", self.calcular_totales_liquidacion)
+        self.combo_reservas_pago.bind("<<ComboboxSelected>>", self.calcular_totales)
 
-        self.cargar_reservas_modal()
+        self.cargar_reservas()
 
-        # =========================================================
-        # ZONA 2: RESUMEN FINANCIERO (AUDITORÍA)
-        # =========================================================
+
         frame_resumen = tk.LabelFrame(self.modal, text=" 2. Resumen de Cuenta ", font=("Arial", 14, "bold"), bg="#F3DCAB", fg="#333333")
         frame_resumen.pack(fill="x", padx=20, pady=10, ipadx=10, ipady=10)
 
@@ -170,9 +167,7 @@ class PagoView:
         tk.Label(fila3, text="TOTAL A PAGAR:", font=("Arial", 16, "bold"), bg="#F3DCAB", fg="#D32F2F").pack(side="left")
         tk.Label(fila3, textvariable=self.var_gran_total, font=("Arial", 18, "bold"), bg="#F3DCAB", fg="#D32F2F").pack(side="right")
 
-        # =========================================================
-        # ZONA 3: DATOS DEL PAGO
-        # =========================================================
+
         frame_pago = tk.LabelFrame(self.modal, text=" 3. Método y Comprobante ", font=("Arial", 14, "bold"), bg="#F3DCAB", fg="#333333")
         frame_pago.pack(fill="x", padx=20, pady=10, ipadx=5, ipady=5)
 
@@ -186,18 +181,16 @@ class PagoView:
         self.combo_comprobante.grid(row=1, column=1, padx=10, pady=10)
         self.combo_comprobante.current(0)
 
-        # =========================================================
-        # BOTÓN FINAL
-        # =========================================================
+
         self.btn_ejecutar_cobro = tk.Button(
-            self.modal, text="✔️ Procesar Pago y Liberar Hab.", 
+            self.modal, text="Procesar Pago y Liberar Hab.", 
             font=("Arial", 16, "bold"), bg="#00838F", fg="white", 
             bd=3, relief="raised", pady=10,
-            command=self.procesar_pago_final
+            command=self.procesar_pago
         )
         self.btn_ejecutar_cobro.pack(fill="x", padx=20, pady=20)
 
-    def cargar_reservas_modal(self):    
+    def cargar_reservas(self):    
         self.ids_reservas_modal_memoria.clear()
         try:
             controller = ServicioController()
@@ -219,7 +212,7 @@ class PagoView:
         except Exception as e:
             messagebox.showerror("Error", f"Fallo al cargar reservas: {e}")
 
-    def calcular_totales_liquidacion(self, event=None):
+    def calcular_totales(self, event=None):
         idx = self.combo_reservas_pago.current()
         if idx == -1 or not self.ids_reservas_modal_memoria or idx >= len(self.ids_reservas_modal_memoria):
             return
@@ -239,8 +232,6 @@ class PagoView:
                 costo_extras = float(fila[3])
                 gran_total = float(fila[4])
                 
-                # BLINDAJE: Guardamos el número en la RAM (Memoria lógica)
-                # Esto es lo que va a la base de datos, NO lo que está en la pantalla.
                 self.gran_total_memoria = gran_total
                 
                 self.var_costo_cuarto.set(f"${costo_cuarto:,.2f}")
@@ -250,7 +241,7 @@ class PagoView:
         except Exception as e:
             messagebox.showerror("Error Matemático", str(e))
 
-    def procesar_pago_final(self):
+    def procesar_pago(self):
         idx = self.combo_reservas_pago.current()
         if idx == -1 or not self.ids_reservas_modal_memoria:
             messagebox.showwarning("Aviso", "Debe seleccionar un cliente antes de cobrar.")
@@ -261,7 +252,6 @@ class PagoView:
             metodo = self.combo_metodo.get()
             comprobante = self.combo_comprobante.get()
             
-            # BLINDAJE: Usamos la variable numérica pura, evitamos extraer de StringVars
             monto_total = getattr(self, 'gran_total_memoria', 0.0)
 
             if monto_total <= 0:
@@ -275,7 +265,7 @@ class PagoView:
             if not confirmar:
                 return
 
-            # BLINDAJE: Extraemos el usuario sin importar si es dict o entero
+
             usr_actual = self.manager.usuario_actual
             if isinstance(usr_actual, dict):
                 id_usuario_actual = int(usr_actual.get('id_usuario', usr_actual.get('id', 0)))
@@ -286,15 +276,13 @@ class PagoView:
                 raise ValueError("Sesión inválida: No se detectó al usuario.")
             
             controller = CajaController()
-            # Esta línea ya no congelará la BD porque corregimos el controlador
             controller.registrar_pago_completo(id_reserva_real, monto_total, metodo, comprobante, id_usuario_actual)
 
             messagebox.showinfo("Éxito", "Pago registrado y habitación liberada correctamente.")
             
             self.modal.destroy()      
             
-            # Repinta la tabla (ahora sí funcionará porque SQL Server liberó la tabla)
-            self.cargar_datos_pagos() 
+            self.cargar_pagos() 
 
         except ValueError as ve:
             messagebox.showwarning("Dato Inválido", str(ve))

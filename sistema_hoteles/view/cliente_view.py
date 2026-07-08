@@ -11,6 +11,8 @@ class ClienteView:
         self.configurar_interfaz()
         self.recargar_tabla_clientes()
 
+    # ─── CONSTRUCCIÓN DE INTERFAZ ───────────────────────
+
     def configurar_interfaz(self):
 
         # --- Cabecera principal ---
@@ -42,14 +44,14 @@ class ClienteView:
         self.form_frame = tk.Frame(self.panel_izquierdo, background="#F3DCAB")
         self.form_frame.pack(pady=20, padx=10, fill="x")
 
-        self.menu_clientes()
+        self.panel_formulario()
 
         self.panel_derecho = tk.Frame(self.frame_main, background="white", bd=2, relief="solid")
         self.panel_derecho.pack(side=tk.LEFT, fill="both", expand=True)
 
-        self.menu_tablas()
+        self.panel_tabla()
 
-    def menu_clientes(self):
+    def panel_formulario(self):
 
         # Nombre
         tk.Label(self.form_frame, text="Nombre:", bg="#F3DCAB", font=("Arial", 18, "bold")).grid(row=0, column=0, sticky="w", pady=5)
@@ -98,7 +100,7 @@ class ClienteView:
         self.btn_ingresar.grid(row=0, column=0, columnspan=2, pady=(0, 20), ipadx=20)
 
         self.btn_eliminar = tk.Button(
-            self.btn_frame, text="Eliminar", font=("Arial", 20, "bold"), bg="white",
+            self.btn_frame, text="Desactivar", font=("Arial", 20, "bold"), bg="white",
             bd=2, relief="raised", command=self.eliminar_cliente
         )
         self.btn_eliminar.grid(row=1, column=0, padx=10)
@@ -109,7 +111,7 @@ class ClienteView:
         )
         self.btn_modificar.grid(row=1, column=1, padx=10)
 
-    def menu_tablas(self):
+    def panel_tabla(self):
 
         # Configuración del estilo de la tabla
         estilo = ttk.Style()
@@ -159,6 +161,8 @@ class ClienteView:
         self.tabla_clientes.heading("Direccion", text="Direccion")
         self.tabla_clientes.column("Direccion", width=200, anchor="w")
 
+    # ─── CARGA DE DATOS ─────────────────────────────────
+
     def recargar_tabla_clientes(self):
 
         for item in self.tabla_clientes.get_children():
@@ -173,6 +177,7 @@ class ClienteView:
         for cliente in lista_clientes:
             self.tabla_clientes.insert("", tk.END, values=cliente)
 
+    # ─── CRUD ───────────────────────────────────────────
 
     def registrar_cliente(self):
         
@@ -210,7 +215,6 @@ class ClienteView:
         except Exception as e:
             messagebox.showerror("Error Crítico de BD", str(e))
 
-
     def eliminar_cliente(self):
         seleccion = self.tabla_clientes.selection()
 
@@ -226,8 +230,8 @@ class ClienteView:
 
         # Confirmacion para eliminar los datos
         confirmar = messagebox.askyesno(
-            "Confirmar Eliminación",
-            f"¿Estás seguro de eliminar permanentemente a {nombre_completo}?"
+            "Confirmar Desactivación",
+            f"¿Estás seguro de desactivar a {nombre_completo}?"
         )
 
         if confirmar:
@@ -235,11 +239,10 @@ class ClienteView:
                 controller = ClienteController()
                 controller.eliminar_cliente(id_cliente)
                 
-                messagebox.showinfo("Éxito", "Cliente eliminado correctamente.")
+                messagebox.showinfo("Éxito", "Cliente desactivado correctamente.")
                 self.recargar_tabla_clientes()
             except Exception as e:
-                messagebox.showerror("Error Crítico", f"No se pudo eliminar al cliente: {e}")
-
+                messagebox.showerror("Error Crítico", f"No se pudo desactivar al cliente: {e}")
 
     def modificar_cliente(self):
         seleccion = self.tabla_clientes.selection()
@@ -317,12 +320,11 @@ class ClienteView:
         # Botón de Guardar
         btn_guardar = tk.Button(
             self.ventana_editar, text="Guardar Cambios", font=("Arial", 18, "bold"),
-            bg="#1565C0", fg="white", bd=2, relief="raised", command=self.ejecutar_modificacion_cliente
+            bg="#1565C0", fg="white", bd=2, relief="raised", command=self.ejecutar_modificacion
         )
         btn_guardar.pack(pady=20, fill="x", padx=50)
 
-
-    def ejecutar_modificacion_cliente(self):
+    def ejecutar_modificacion(self):
 
         nombre = self.edit_nombre.get().strip()
         apellido = self.edit_apellido.get().strip()

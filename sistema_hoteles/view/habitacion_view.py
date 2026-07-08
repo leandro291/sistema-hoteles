@@ -11,7 +11,9 @@ class HabitacionView:
         self.configurar_interfaz()
         
         # Metodo para llenar la pantalla con los valores de la BD
-        self.refrescar_lista_habitaciones()
+        self.refrescar_lista()
+
+    # ─── CONSTRUCCIÓN DE INTERFAZ ───────────────────────
 
     def configurar_interfaz(self):
 
@@ -83,7 +85,7 @@ class HabitacionView:
         self.btn_editar.pack(side=tk.LEFT, padx=10)
 
         self.btn_eliminar = tk.Button(
-            self.sub_frame_botones, text="Eliminar Habitación", font=("Arial", 18, "bold"), fg="#C62828",
+            self.sub_frame_botones, text="Desactivar Habitación", font=("Arial", 18, "bold"), fg="#C62828",
             command=self.eliminar_habitacion
         )
         self.btn_eliminar.pack(side=tk.LEFT, padx=10)
@@ -94,7 +96,9 @@ class HabitacionView:
         )
         self.btn_gestionar_tipos.pack(side=tk.LEFT, padx=(40, 10))
 
-    def refrescar_lista_habitaciones(self):
+    # ─── CARGA DE DATOS ─────────────────────────────────
+
+    def refrescar_lista(self):
         self.lista_habitaciones.delete(0, tk.END)
         self.ids_memoria = [] 
             
@@ -147,19 +151,59 @@ class HabitacionView:
         self.frame_tarjetas = tk.Frame(self.caja_tabla, bg="#D9D9D9")
         self.frame_tarjetas.pack(pady=10)
         
-        self.crear_tarjeta_info("Total de\nCamas", capacidad, 0, 0)
-        self.crear_tarjeta_info("Precio\nActual", f"S/ {precio}", 0, 1)
-        self.crear_tarjeta_info("Estado de\nDisponibilidad", estado, 0, 2)
-        self.crear_tarjeta_info("Nivel del\nPiso", f"Piso {piso}", 1, 1)
+        self.crear_tarjeta("Total de\nCamas", capacidad, 0, 0)
+        self.crear_tarjeta("Precio\nActual", f"S/ {precio}", 0, 1)
+        self.crear_tarjeta("Estado de\nDisponibilidad", estado, 0, 2)
+        self.crear_tarjeta("Nivel del\nPiso", f"Piso {piso}", 1, 1)
 
-    def crear_tarjeta_info(self, titulo, valor, fila, columna):
-
-        self.tarjeta = tk.Frame(self.frame_tarjetas, bg="white", bd=1, relief="solid", width=250, height=200)
-        self.tarjeta.grid(row=fila, column=columna, padx=15, pady=15)
-        self.tarjeta.pack_propagate(False)
+    def cargar_tipos(self):
+        controller = HabitacionController()
+        self.datos_bd_tipos = controller.obtener_tipos_de_habitacion() 
         
-        tk.Label(self.tarjeta, text=titulo, bg="#00838F", fg="white", font=("Arial", 20, "bold"), pady=5).pack(fill="x")
-        tk.Label(self.tarjeta, text=valor, bg="white", fg="#00838F", font=("Arial", 25, "bold")).pack(expand=True)
+        if not self.datos_bd_tipos:
+            messagebox.showwarning("Aviso", "No hay tipos de habitación registrados. Cree uno primero.")
+            self.tipo_habitacion['values'] = []
+            return
+
+        nombres_limpios = [fila[1] for fila in self.datos_bd_tipos]
+        self.tipo_habitacion['values'] = nombres_limpios
+        self.tipo_habitacion.current(0) 
+
+    # ─── CRUD ───────────────────────────────────────────
+
+    def eliminar_habitacion(self):
+        
+        seleccion = self.lista_habitaciones.curselection()
+        if not seleccion:
+            messagebox.showwarning("Aviso", "Selecciona una habitación de la lista para eliminar.")
+            return
+        
+        if self.lista_habitaciones.get(seleccion[0]) == "Sin habitaciones":
+            return
+        
+        id_hab = self.ids_memoria[seleccion[0]]
+        nombre_hab = self.lista_habitaciones.get(seleccion[0])
+        
+        confirmar = messagebox.askyesno(
+            "Confirmar Desactivación", 
+            f"¿Estás seguro de desactivar la {nombre_hab}?"
+        )
+        
+        if confirmar:
+            try:
+                controller = HabitacionController()
+                controller.eliminar_habitacion(id_hab)
+                
+                messagebox.showinfo("Éxito", "Habitación desactivada correctamente.")
+                self.refrescar_lista()
+                
+                for widget in self.caja_tabla.winfo_children():
+                    widget.destroy()
+                    
+            except Exception as e:
+                messagebox.showerror("Error Crítico", f"No se pudo desactivar: {e}")
+
+    # ─── MODALES ────────────────────────────────────────
 
     def abrir_formulario_tipos(self):
         self.ventana_tipos = tk.Toplevel(self.root)
@@ -191,13 +235,13 @@ class HabitacionView:
 
         self.btn_guardar_tipo = tk.Button(
             self.ventana_tipos, text="Guardar Nuevo Tipo", bg="#ffffff", fg="#40e794", 
-            font=("Arial", 20, "bold"), bd=2, relief="raised", command=self.ejecutar_formulario_tipo_habitacion
+            font=("Arial", 20, "bold"), bd=2, relief="raised", command=self.guardar_tipo
         )
         self.btn_guardar_tipo.pack(fill="x", padx=40)
         
         self.ventana_tipos.grab_set()
 
-    def ejecutar_formulario_tipo_habitacion(self):
+    def guardar_tipo(self):
         nombre = self.tipo_hab_nombre.get().strip()
         precio = self.tipo_hab_precio.get().strip()
         capacidad = self.tipo_hab_capacidad.get().strip()
@@ -243,30 +287,17 @@ class HabitacionView:
         self.tipo_habitacion = ttk.Combobox(self.ventana_agregar, font=("Arial", 22), state="readonly")
         self.tipo_habitacion.pack(fill="x", padx=40, pady=(0, 25))
 
-        self.cargar_datos_combobox()
+        self.cargar_tipos()
 
         self.btn_guardar_habitacion = tk.Button(
             self.ventana_agregar, text="Guardar Habitacion", bg="#40e794", fg="white", 
-            font=("Arial", 22, "bold"), bd=2, relief="raised", command=self.ejecutar_registro_habitacion
+            font=("Arial", 22, "bold"), bd=2, relief="raised", command=self.guardar_habitacion
         )
         self.btn_guardar_habitacion.pack(fill="x", padx=40)
         
         self.ventana_agregar.grab_set()
 
-    def cargar_datos_combobox(self):
-        controller = HabitacionController()
-        self.datos_bd_tipos = controller.obtener_tipos_de_habitacion() 
-        
-        if not self.datos_bd_tipos:
-            messagebox.showwarning("Aviso", "No hay tipos de habitación registrados. Cree uno primero.")
-            self.tipo_habitacion['values'] = []
-            return
-
-        nombres_limpios = [fila[1] for fila in self.datos_bd_tipos]
-        self.tipo_habitacion['values'] = nombres_limpios
-        self.tipo_habitacion.current(0) 
-
-    def ejecutar_registro_habitacion(self):
+    def guardar_habitacion(self):
 
         piso = self.num_piso.get().strip()
         numero = self.num_habitacion.get().strip()
@@ -288,44 +319,12 @@ class HabitacionView:
             messagebox.showinfo("Éxito", "Habitacion registrada correctamente en el sistema")
             
             self.ventana_agregar.destroy() 
-            self.refrescar_lista_habitaciones()
+            self.refrescar_lista()
             
         except ValueError as e:
             messagebox.showerror("Datos Inválidos", str(e))
         except Exception as e:
             messagebox.showerror("Error Crítico de BD", str(e))
-
-    def eliminar_habitacion(self):
-        
-        seleccion = self.lista_habitaciones.curselection()
-        if not seleccion:
-            messagebox.showwarning("Aviso", "Selecciona una habitación de la lista para eliminar.")
-            return
-        
-        if self.lista_habitaciones.get(seleccion[0]) == "Sin habitaciones":
-            return
-        
-        id_hab = self.ids_memoria[seleccion[0]]
-        nombre_hab = self.lista_habitaciones.get(seleccion[0])
-        
-        confirmar = messagebox.askyesno(
-            "Confirmar Eliminación", 
-            f"¿Estás seguro de eliminar permanentemente la {nombre_hab}?"
-        )
-        
-        if confirmar:
-            try:
-                controller = HabitacionController()
-                controller.eliminar_habitacion(id_hab)
-                
-                messagebox.showinfo("Éxito", "Habitación eliminada correctamente.")
-                self.refrescar_lista_habitaciones()
-                
-                for widget in self.caja_tabla.winfo_children():
-                    widget.destroy()
-                    
-            except Exception as e:
-                messagebox.showerror("Error Crítico", f"No se pudo eliminar: {e}")
 
     def editar_habitacion(self):
 
@@ -393,13 +392,13 @@ class HabitacionView:
         # Boton para realizar el update
         self.btn_actualizar_habitacion = tk.Button(
             self.ventana_editar, text="Actualizar Habitación", bg="#1565C0", fg="white", 
-            font=("Arial", 22, "bold"), bd=2, relief="raised", command=self.ejecutar_edicion_habitacion
+            font=("Arial", 22, "bold"), bd=2, relief="raised", command=self.guardar_edicion
         )
         self.btn_actualizar_habitacion.pack(fill="x", padx=40)
         
         self.ventana_editar.grab_set()
 
-    def ejecutar_edicion_habitacion(self):
+    def guardar_edicion(self):
 
         piso_nuevo = self.num_piso_edicion.get().strip()
         numero_nuevo = self.num_habitacion_edicion.get().strip()
@@ -421,7 +420,7 @@ class HabitacionView:
             messagebox.showinfo("Éxito", "Habitación actualizada correctamente.")
             
             self.ventana_editar.destroy() 
-            self.refrescar_lista_habitaciones()
+            self.refrescar_lista()
             
             for widget in self.caja_tabla.winfo_children():
                 widget.destroy()
@@ -432,3 +431,14 @@ class HabitacionView:
             messagebox.showerror("Datos Inválidos", str(e))
         except Exception as e:
             messagebox.showerror("Error Crítico de BD", str(e))
+
+    # ─── MÉTODOS AUXILIARES ─────────────────────────────
+
+    def crear_tarjeta(self, titulo, valor, fila, columna):
+
+        self.tarjeta = tk.Frame(self.frame_tarjetas, bg="white", bd=1, relief="solid", width=250, height=200)
+        self.tarjeta.grid(row=fila, column=columna, padx=15, pady=15)
+        self.tarjeta.pack_propagate(False)
+        
+        tk.Label(self.tarjeta, text=titulo, bg="#00838F", fg="white", font=("Arial", 20, "bold"), pady=5).pack(fill="x")
+        tk.Label(self.tarjeta, text=valor, bg="white", fg="#00838F", font=("Arial", 25, "bold")).pack(expand=True)

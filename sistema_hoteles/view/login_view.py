@@ -13,6 +13,8 @@ class LoginView:
 
         self.configurar_interfaz()
 
+    # ─── CONSTRUCCIÓN DE INTERFAZ ───────────────────────
+
     def configurar_interfaz(self):
 
         carpeta_vistas = os.path.dirname(__file__)
@@ -39,9 +41,11 @@ class LoginView:
         self.div_derecho.pack(side=tk.RIGHT, fill="both", expand=True)
         self.div_derecho.pack_propagate(False)
 
-        self.login_usuario()
+        self.panel_login()
 
-    def login_usuario(self):
+    # ─── LOGIN ──────────────────────────────────────────
+
+    def panel_login(self):
 
         if hasattr(self, 'formulario'):
             self.formulario.destroy()
@@ -63,17 +67,35 @@ class LoginView:
         self.var_mostrar_pwd = tk.BooleanVar()
         self.casilla_mostrar = tk.Checkbutton(
             self.formulario, text="Mostrar contraseña", background="#F3DCAB", 
-            font=("Arial", 12), variable=self.var_mostrar_pwd, command=self.toggle_contrasena_login
+            font=("Arial", 12), variable=self.var_mostrar_pwd, command=self.alternar_visibilidad
         )
         self.casilla_mostrar.pack(anchor="w", pady=(0, 30))
 
-        self.boton_iniciar = tk.Button(self.formulario, text="Iniciar", font=("Arial", 20, "bold"), bd=2, relief="raised", command=self.ejecutar_login)
+        self.boton_iniciar = tk.Button(self.formulario, text="Iniciar", font=("Arial", 20, "bold"), bd=2, relief="raised", command=self.iniciar_sesion)
         self.boton_iniciar.pack(pady=10, ipady=3, fill="x")
 
-        self.boton_registrar = tk.Button(self.formulario, text="Registrar", font=("Arial", 20, "bold"), bd=2, relief="raised", command=self.registrar_usuario)
+        self.boton_registrar = tk.Button(self.formulario, text="Registrar", font=("Arial", 20, "bold"), bd=2, relief="raised", command=self.panel_registro)
         self.boton_registrar.pack(pady=10, ipady=3, fill="x")
 
-    def registrar_usuario(self):
+    def iniciar_sesion(self):
+
+        login_usuario = self.inicio_usuario.get().strip()
+        login_contrasena = self.inicio_contrasena.get()
+
+        controlador = AuthController()
+
+        try:
+            datos = controlador.iniciar_sesion(login_usuario, login_contrasena)
+            self.manager.mostrar_dashboard(datos)
+
+        except ValueError as e:
+            messagebox.showerror("Datos Inválidos", str(e))
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+
+    # ─── REGISTRO ───────────────────────────────────────
+
+    def panel_registro(self):
         self.formulario.destroy()
 
         self.formulario = tk.Frame(self.div_derecho, background="#F3DCAB")
@@ -95,13 +117,13 @@ class LoginView:
         self.registro_rol.current(0)
         self.registro_rol.pack(ipady=3, pady=(5, 20), fill="x")
 
-        self.boton_registrarse = tk.Button(self.formulario, text="Registrarse", font=("Arial", 20, "bold"), bd=2, relief="raised", command=self.ejecutar_registro)
+        self.boton_registrarse = tk.Button(self.formulario, text="Registrarse", font=("Arial", 20, "bold"), bd=2, relief="raised", command=self.registrar)
         self.boton_registrarse.pack(pady=10, ipady=3, fill="x")
 
-        self.boton_inicio = tk.Button(self.formulario, text="Regresar", font=("Arial", 20, "bold"), bd=2, relief="raised", command=self.login_usuario)
+        self.boton_inicio = tk.Button(self.formulario, text="Regresar", font=("Arial", 20, "bold"), bd=2, relief="raised", command=self.panel_login)
         self.boton_inicio.pack(pady=10, ipady=3, fill="x")
 
-    def ejecutar_registro(self):
+    def registrar(self):
 
         nombre = self.registro_usuario.get().strip()
         contrasena = self.registro_contrasena.get() 
@@ -118,30 +140,16 @@ class LoginView:
             )
 
             messagebox.showinfo("Exito", "Usuario registrado correctamente")
-            self.login_usuario()
-
-        except ValueError as e:
-            messagebox.showerror("Datos Inválidos", str(e))
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
-    
-    def ejecutar_login(self):
-
-        login_usuario = self.inicio_usuario.get().strip()
-        login_contrasena = self.inicio_contrasena.get()
-
-        controlador = AuthController()
-
-        try:
-            datos = controlador.iniciar_sesion(login_usuario, login_contrasena)
-            self.manager.mostrar_dashboard(datos)
+            self.panel_login()
 
         except ValueError as e:
             messagebox.showerror("Datos Inválidos", str(e))
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
-    def toggle_contrasena_login(self):
+    # ─── MÉTODOS AUXILIARES ─────────────────────────────
+
+    def alternar_visibilidad(self):
         
         if self.var_mostrar_pwd.get():
             self.inicio_contrasena.config(show="")

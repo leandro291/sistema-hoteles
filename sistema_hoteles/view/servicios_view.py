@@ -17,9 +17,11 @@ class ServiciosView:
         
         self.configurar_interfaz()
         
-        # Carga inicial de datos (Descomentar cuando conectes los controladores)
-        self.cargar_combobox_reservas()
-        self.cargar_combobox_servicios()
+        # Carga inicial de datos
+        self.cargar_reservas()
+        self.cargar_servicios()
+
+    # ─── CONSTRUCCIÓN DE INTERFAZ ───────────────────────
 
     def configurar_interfaz(self):
         # --- HEADER ---
@@ -55,7 +57,7 @@ class ServiciosView:
         tk.Label(self.panel_izquierda, text="Seleccionar Reserva Activa:", bg="#F3DCAB", fg="#00838F", font=("Arial", 16, "bold")).pack(anchor="w", padx=15, pady=(15, 2))
         self.lista_reservas = ttk.Combobox(self.panel_izquierda, font=("Arial", 16), state="readonly", width=25)
         self.lista_reservas.pack(padx=15, pady=(0, 15))
-        self.lista_reservas.bind("<<ComboboxSelected>>", self.cargar_consumos_de_reserva)
+        self.lista_reservas.bind("<<ComboboxSelected>>", self.cargar_consumos)
 
         # 2. Selección de Servicio y Botón de Nuevo Servicio
         tk.Label(self.panel_izquierda, text="Catálogo de Servicios:", bg="#F3DCAB", fg="#00838F", font=("Arial", 16, "bold")).pack(anchor="w", padx=15, pady=(5, 2))
@@ -65,7 +67,7 @@ class ServiciosView:
 
         self.lista_servicios = ttk.Combobox(frame_combo_servicio, font=("Arial", 16), state="readonly", width=18)
         self.lista_servicios.pack(side=tk.LEFT)
-        self.lista_servicios.bind("<<ComboboxSelected>>", self.actualizar_precio_unitario)
+        self.lista_servicios.bind("<<ComboboxSelected>>", self.actualizar_precio)
 
         self.btn_nuevo_servicio = tk.Button(
             frame_combo_servicio, text="➕ Nuevo", font=("Arial", 10, "bold"), 
@@ -87,9 +89,9 @@ class ServiciosView:
         self.spin_cantidad.pack(padx=15, pady=(0, 15))
         
         # Eventos para recalcular el subtotal en vivo
-        self.spin_cantidad.bind("<KeyRelease>", self.calcular_subtotal_vivo)
-        self.spin_cantidad.bind("<<Increment>>", self.calcular_subtotal_vivo)
-        self.spin_cantidad.bind("<<Decrement>>", self.calcular_subtotal_vivo)
+        self.spin_cantidad.bind("<KeyRelease>", self.calcular_subtotal)
+        self.spin_cantidad.bind("<<Increment>>", self.calcular_subtotal)
+        self.spin_cantidad.bind("<<Decrement>>", self.calcular_subtotal)
 
         # 5. Subtotal Calculado
         self.lbl_subtotal = tk.Label(
@@ -101,7 +103,7 @@ class ServiciosView:
         # Botón Guardar Transacción
         self.btn_guardar = tk.Button(
             self.panel_izquierda, text="💳 Agregar a la Cuenta", font=("Arial", 16, "bold"), 
-            bg="#21DF96", fg="white", bd=2, relief="raised", command=self.ejecutar_transaccion
+            bg="#21DF96", fg="white", bd=2, relief="raised", command=self.registrar_cargo
         )
         self.btn_guardar.pack(fill="x", side=tk.BOTTOM, padx=15, pady=15, ipady=5)
 
@@ -149,64 +151,9 @@ class ServiciosView:
         )
         self.lbl_total_cuenta.pack(side=tk.RIGHT)
 
-    # Modal para agregar servicios
-    def abrir_modal_nuevo_servicio(self):
-        self.modal = tk.Toplevel(self.root)
-        self.modal.title("Agregar Nuevo Servicio al Catálogo")
-        self.modal.geometry("500x500")
-        self.modal.resizable(False, False)
-        self.modal.config(bg="#F3DCAB")        
+    # ─── CARGA DE DATOS ─────────────────────────────────
 
-        tk.Label(self.modal, text="Registro de Servicio", font=("Arial", 35, "bold"), bg="#F3DCAB").pack(pady=15)
-
-        self.frame_form = tk.Frame(self.modal, bg="#F3DCAB")
-        self.frame_form.pack(fill="both", expand=True, padx=20)
-
-        tk.Label(self.frame_form, text="Nombre del Servicio:", font=("Arial", 25, "bold"), bg="#F3DCAB").pack(anchor="w")
-        self.nombre = tk.Entry(self.frame_form, font=("Arial", 20), width=30)
-        self.nombre.pack(pady=(0, 10))
-
-        tk.Label(self.frame_form, text="Precio ($):", font=("Arial", 25, "bold"), bg="#F3DCAB").pack(anchor="w")
-        self.precio = tk.Entry(self.frame_form, font=("Arial", 20), width=30)
-        self.precio.pack(pady=(0, 10))
-
-        tk.Label(self.frame_form, text="Descripción:", font=("Arial", 25, "bold"), bg="#F3DCAB").pack(anchor="w")
-        self.descripcion = tk.Entry(self.frame_form, font=("Arial", 20), width=30)
-        self.descripcion.pack(pady=(0, 15))
-
-        tk.Button(
-            self.modal, text="Guardar Servicio", font=("Arial", 28, "bold"), 
-            bg="#21DF96", fg="white", command=self.guardar_nuevo_servicio
-        ).pack(pady=20, fill="x", padx=20, ipady=20)
-
-    def guardar_nuevo_servicio(self):
-        
-        nombre = self.nombre.get().strip()
-        precio = self.precio.get().strip()
-        descripcion = self.descripcion.get().strip()
-
-        try:
-            
-            if not nombre: 
-                raise ValueError("El nombre es obligatorio.")
-            
-            if not precio: 
-                raise ValueError("Debe ingresar un precio.")
-            
-            controller = ServicioController()
-            controller.registrar_nuevo_servicio(nombre, descripcion, precio)
-
-    
-            messagebox.showinfo("Exito", "Servicio agregado al catalogo")
-            self.cargar_combobox_servicios() 
-            self.modal.destroy() 
-            
-        except ValueError as ve:
-            messagebox.showwarning("Dato Inválido", str(ve))
-        except Exception as e:
-            messagebox.showerror("Error de BD", str(e))
-    
-    def cargar_combobox_reservas(self):
+    def cargar_reservas(self):
         self.ids_reservas_memoria.clear()
         
         try:
@@ -234,7 +181,7 @@ class ServiciosView:
         except Exception as e:
             messagebox.showerror("Error", f"No se pudieron cargar las reservas: {e}")
         
-    def cargar_combobox_servicios(self):
+    def cargar_servicios(self):
         self.datos_servicios_memoria.clear()
 
         try:
@@ -264,20 +211,20 @@ class ServiciosView:
 
             self.lista_servicios['values'] = visual
             self.lista_servicios.current(0) 
-            self.actualizar_precio_unitario()
+            self.actualizar_precio()
 
         except Exception as e:
             messagebox.showerror("Error Crítico de BD", f"No se pudo cargar el catálogo de servicios:\n{e}")
 
-    def actualizar_precio_unitario(self, event=None):
+    def actualizar_precio(self, event=None):
         idx = self.lista_servicios.current()
         if idx >= 0 and self.datos_servicios_memoria:
             servicio_seleccionado = self.datos_servicios_memoria[idx]
             self.precio_unitario_actual = servicio_seleccionado["precio"]
             self.lbl_precio.config(text=f"Precio Unitario: ${self.precio_unitario_actual:.2f}")
-            self.calcular_subtotal_vivo()
+            self.calcular_subtotal()
 
-    def calcular_subtotal_vivo(self, event=None):
+    def calcular_subtotal(self, event=None):
         try:
             cantidad = int(self.spin_cantidad.get())
             if cantidad < 1: 
@@ -288,7 +235,7 @@ class ServiciosView:
         except ValueError:
             self.lbl_subtotal.config(text="Subtotal: $0.00")
 
-    def cargar_consumos_de_reserva(self, event=None):
+    def cargar_consumos(self, event=None):
         # Limpiar la tabla de registros anteriores 
         for item in self.tabla_consumos.get_children():
             self.tabla_consumos.delete(item)
@@ -305,10 +252,9 @@ class ServiciosView:
         id_reserva_real = self.ids_reservas_memoria[idx_reserva]
 
         try:
-            # Instanciar el controlador y pedirle los datos (esto ejecutará el fetchall)
+            # Instanciar el controlador y pedirle los datos
             controller = ConsumoController()
             
-            # Esto devuelve la lista de tuplas desde SQL Server
             consumos = controller.obtener_historial_consumos(id_reserva_real) 
 
             total_extra = 0.0
@@ -316,7 +262,6 @@ class ServiciosView:
             # Iterar sobre los resultados e insertarlos en el Treeview
             if consumos:
                 for fila in consumos:
-                    # Desempaquetamos la tupla según el orden del SELECT que hicimos en el DAO
                     id_reserva_servicio = fila[0]
                     nombre = fila[1]
                     precio = f"${float(fila[2])}"
@@ -324,19 +269,18 @@ class ServiciosView:
                     subtotal_num = float(fila[4])
                     subtotal_str = f"${subtotal_num:.2f}"
                     
-                    # Insertamos la fila visualmente en la tabla blanca
                     self.tabla_consumos.insert("", "end", values=(id_reserva_servicio, nombre, precio, cantidad, subtotal_str))
                     
-                    # Acumulamos el subtotal matemático para el gran total
                     total_extra += subtotal_num
 
-            # Actualizar el recuadro azul de la esquina inferior derecha
             self.lbl_total_cuenta.config(text=f"Total Extra: ${total_extra:.2f}")
 
         except Exception as e:
             messagebox.showerror("Error de Carga", f"Fallo al traer los detalles de consumo: {e}")
 
-    def ejecutar_transaccion(self):
+    # ─── CRUD ───────────────────────────────────────────
+
+    def registrar_cargo(self):
         idx_reserva = self.lista_reservas.current()
         idx_servicio = self.lista_servicios.current()
         
@@ -353,7 +297,6 @@ class ServiciosView:
             if cantidad < 1:
                 raise ValueError("La cantidad debe ser 1 o mayor.")
 
-            # Extracción segura
             id_reserva_real = self.ids_reservas_memoria[idx_reserva]
             id_servicio_real = self.datos_servicios_memoria[idx_servicio]["id"]
             
@@ -367,8 +310,8 @@ class ServiciosView:
             messagebox.showinfo("Éxito", f"Cargo registrado correctamente. (Ticket ID: {id_generado})")
             
             self.spin_cantidad.set(1)
-            self.calcular_subtotal_vivo() 
-            self.cargar_consumos_de_reserva() 
+            self.calcular_subtotal() 
+            self.cargar_consumos() 
             
         except ValueError as ve:
             messagebox.showerror("Error", str(ve))
@@ -392,7 +335,64 @@ class ServiciosView:
                 
                 messagebox.showinfo("Éxito", "Cargo anulado correctamente.")
                 
-                self.cargar_consumos_de_reserva()
+                self.cargar_consumos()
                 
             except Exception as e:
                 messagebox.showerror("Error de BD", f"No se pudo anular el cargo en la base de datos:\n{e}")
+
+    # ─── MODALES ────────────────────────────────────────
+
+    def abrir_modal_nuevo_servicio(self):
+        self.modal = tk.Toplevel(self.root)
+        self.modal.title("Agregar Nuevo Servicio al Catálogo")
+        self.modal.geometry("500x500")
+        self.modal.resizable(False, False)
+        self.modal.config(bg="#F3DCAB")        
+
+        tk.Label(self.modal, text="Registro de Servicio", font=("Arial", 35, "bold"), bg="#F3DCAB").pack(pady=15)
+
+        self.frame_form = tk.Frame(self.modal, bg="#F3DCAB")
+        self.frame_form.pack(fill="both", expand=True, padx=20)
+
+        tk.Label(self.frame_form, text="Nombre del Servicio:", font=("Arial", 25, "bold"), bg="#F3DCAB").pack(anchor="w")
+        self.nombre = tk.Entry(self.frame_form, font=("Arial", 20), width=30)
+        self.nombre.pack(pady=(0, 10))
+
+        tk.Label(self.frame_form, text="Precio ($):", font=("Arial", 25, "bold"), bg="#F3DCAB").pack(anchor="w")
+        self.precio = tk.Entry(self.frame_form, font=("Arial", 20), width=30)
+        self.precio.pack(pady=(0, 10))
+
+        tk.Label(self.frame_form, text="Descripción:", font=("Arial", 25, "bold"), bg="#F3DCAB").pack(anchor="w")
+        self.descripcion = tk.Entry(self.frame_form, font=("Arial", 20), width=30)
+        self.descripcion.pack(pady=(0, 15))
+
+        tk.Button(
+            self.modal, text="Guardar Servicio", font=("Arial", 28, "bold"), 
+            bg="#21DF96", fg="white", command=self.guardar_servicio
+        ).pack(pady=20, fill="x", padx=20, ipady=20)
+
+    def guardar_servicio(self):
+        
+        nombre = self.nombre.get().strip()
+        precio = self.precio.get().strip()
+        descripcion = self.descripcion.get().strip()
+
+        try:
+            
+            if not nombre: 
+                raise ValueError("El nombre es obligatorio.")
+            
+            if not precio: 
+                raise ValueError("Debe ingresar un precio.")
+            
+            controller = ServicioController()
+            controller.registrar_nuevo_servicio(nombre, descripcion, precio)
+
+            messagebox.showinfo("Exito", "Servicio agregado al catalogo")
+            self.cargar_servicios() 
+            self.modal.destroy() 
+            
+        except ValueError as ve:
+            messagebox.showwarning("Dato Inválido", str(ve))
+        except Exception as e:
+            messagebox.showerror("Error de BD", str(e))
