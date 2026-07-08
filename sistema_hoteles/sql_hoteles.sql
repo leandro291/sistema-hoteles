@@ -17,7 +17,8 @@ CREATE TABLE tipo_habitacion (
     nombre VARCHAR(100) NOT NULL,
     precio DECIMAL(10, 2) NOT NULL,
     capacidad INT NOT NULL,
-    descripcion TEXT
+    descripcion TEXT,
+    activo BOOLEAN DEFAULT TRUE
 );
 
 CREATE TABLE cliente (
@@ -29,7 +30,8 @@ CREATE TABLE cliente (
     num_documento VARCHAR(50) NOT NULL,
     telefono VARCHAR(20),
     correo VARCHAR(150),
-    direccion TEXT
+    direccion TEXT,
+    activo BOOLEAN DEFAULT TRUE
 
 );
 
@@ -38,7 +40,8 @@ CREATE TABLE usuario (
     id_usuario SERIAL PRIMARY KEY,
     nombre_usuario VARCHAR(100) NOT NULL UNIQUE,
     contrasena VARCHAR(255) NOT NULL, 
-    rol VARCHAR(50) NOT NULL
+    rol VARCHAR(50) NOT NULL,
+    activo BOOLEAN DEFAULT TRUE
 );
 
 CREATE TABLE servicio (
@@ -46,7 +49,8 @@ CREATE TABLE servicio (
     id_servicio SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     descripcion TEXT,
-    precio DECIMAL(10, 2) NOT NULL
+    precio DECIMAL(10, 2) NOT NULL,
+    activo BOOLEAN DEFAULT TRUE
 
 );
 
@@ -58,7 +62,8 @@ CREATE TABLE habitacion (
     num_piso INT NOT NULL,
     num_habitacion VARCHAR(20) NOT NULL,
     estado VARCHAR(50) NOT NULL,
-    id_tipo_habitacion INT REFERENCES tipo_habitacion(id_tipo_habitacion) ON DELETE CASCADE
+    id_tipo_habitacion INT REFERENCES tipo_habitacion(id_tipo_habitacion) ON DELETE CASCADE,
+    activo BOOLEAN DEFAULT TRUE
 
 );
 
