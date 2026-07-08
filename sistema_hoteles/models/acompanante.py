@@ -1,6 +1,5 @@
 from pydantic import BaseModel, field_validator
 
-
 class AcompananteSchema(BaseModel):
     nombre: str
     apellido: str

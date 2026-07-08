@@ -7,16 +7,19 @@ class TipoHabitacionSchema(BaseModel):
     precio: Decimal = Field(gt=0)
     capacidad: int = Field(gt=0)
     descripcion: str
+    activo: bool = True
 
 
 class TipoHabitacion:
-    def __init__(self, nombre: str, precio: Decimal, capacidad: int, descripcion: str, id_tipo_habitacion: int | None = None):
+    def __init__(self, nombre: str, precio: Decimal, capacidad: int, descripcion: str, 
+                 id_tipo_habitacion: int | None = None, activo: bool = True):
         self.id_tipo_habitacion = id_tipo_habitacion
         
         self.nombre = nombre
         self.precio = precio
         self.capacidad = capacidad
         self.descripcion = descripcion
+        self.activo = activo
 
     def __str__(self):
         return f"TipoHabitacion(id={self.id_tipo_habitacion}, nombre='{self.nombre}', capacidad={self.capacidad})"

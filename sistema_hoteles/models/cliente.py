@@ -9,6 +9,7 @@ class ClienteSchema(BaseModel):
     telefono: str
     correo: EmailStr
     direccion: str
+    activo: bool = True
 
     @field_validator('telefono')
     @classmethod
@@ -34,7 +35,8 @@ class ClienteSchema(BaseModel):
 
 class Cliente:
     def __init__(self, nombre: str, apellido: str, tipo_documento: str, numero_documento: str, 
-                 telefono: str, correo: str, direccion: str, id_cliente: int | None = None):
+                 telefono: str, correo: str, direccion: str, id_cliente: int | None = None,
+                 activo: bool = True):
         
         self.id_cliente = id_cliente
         self.nombre = nombre
@@ -44,6 +46,7 @@ class Cliente:
         self.telefono = telefono
         self.correo = correo
         self.direccion = direccion
+        self.activo = activo
 
     def __str__(self):
         return f"Cliente(id={self.id_cliente}, nombre='{self.nombre}', apellido='{self.apellido}')"
