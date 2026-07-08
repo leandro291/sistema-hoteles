@@ -29,6 +29,7 @@ class ServicioDAO(BaseDAO):
                 descripcion,
                 precio
             FROM servicio
+            WHERE activo = TRUE
         """
 
         return self.obtener_varios_datos(consulta)
@@ -38,7 +39,7 @@ class ServicioDAO(BaseDAO):
         consulta = """
                 SELECT precio 
                 FROM servicio
-                WHERE id_servicio = %s
+                WHERE id_servicio = %s AND activo = TRUE
             """
         
         resultado = self.obtener_un_dato_por_id(consulta, id_servicio)

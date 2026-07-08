@@ -26,7 +26,7 @@ class UsuarioDAO(BaseDAO):
         consulta = """
             SELECT id_usuario, contrasena, rol
             FROM usuario
-            WHERE nombre_usuario = %s
+            WHERE nombre_usuario = %s AND activo = TRUE
         """
 
         valores = (nombre_usuario, )

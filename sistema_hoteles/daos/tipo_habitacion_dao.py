@@ -26,6 +26,7 @@ class TipoHabitacionDAO(BaseDAO):
         consulta = """
             SELECT id_tipo_habitacion, nombre
             FROM tipo_habitacion
+            WHERE activo = TRUE
         """
 
         return self.obtener_varios_datos(consulta)

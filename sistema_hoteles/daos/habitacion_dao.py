@@ -34,7 +34,7 @@ class HabitacionDAO(BaseDAO):
                 h.num_piso
             FROM habitacion h
             JOIN tipo_habitacion t ON h.id_tipo_habitacion = t.id_tipo_habitacion
-            WHERE h.id_habitacion = %s
+            WHERE h.id_habitacion = %s AND h.activo = TRUE
 
         """
 
@@ -46,7 +46,8 @@ class HabitacionDAO(BaseDAO):
             SELECT 
                 id_habitacion, 
                 num_habitacion 
-            FROM habitacion;
+            FROM habitacion
+            WHERE activo = TRUE;
         """
 
         return self.obtener_varios_datos(consulta)
@@ -60,7 +61,7 @@ class HabitacionDAO(BaseDAO):
                 th.capacidad 
             FROM habitacion h
             JOIN tipo_habitacion th ON h.id_tipo_habitacion = th.id_tipo_habitacion
-            WHERE h.estado = 'Disponible';
+            WHERE h.estado = 'Disponible' AND h.activo = TRUE;
         """
 
         return self.obtener_varios_datos(consulta)
@@ -94,7 +95,7 @@ class HabitacionDAO(BaseDAO):
             SELECT th.precio
             FROM habitacion h
             JOIN tipo_habitacion th ON h.id_tipo_habitacion = th.id_tipo_habitacion
-            WHERE h.id_habitacion = %s
+            WHERE h.id_habitacion = %s AND h.activo = TRUE
         """
 
         resultado = self.obtener_un_dato_por_id(consulta, id_habitacion)
@@ -109,7 +110,7 @@ class HabitacionDAO(BaseDAO):
             SELECT th.capacidad
             FROM habitacion h
             JOIN tipo_habitacion th ON h.id_tipo_habitacion = th.id_tipo_habitacion
-            WHERE h.id_habitacion = %s
+            WHERE h.id_habitacion = %s AND h.activo = TRUE
         """
 
         resultado = self.obtener_un_dato_por_id(consulta, id_habitacion)
@@ -125,6 +126,7 @@ class HabitacionDAO(BaseDAO):
             SELECT  
             COUNT(*) 
             FROM habitacion 
+            WHERE activo = TRUE
         """
 
         res = self.obtener_un_registro(consulta)
@@ -136,7 +138,7 @@ class HabitacionDAO(BaseDAO):
             SELECT  
             COUNT(*) 
             FROM habitacion 
-            WHERE estado = 'Disponible';
+            WHERE estado = 'Disponible' AND activo = TRUE;
         """
 
         res = self.obtener_un_registro(consulta)
@@ -148,7 +150,7 @@ class HabitacionDAO(BaseDAO):
             SELECT  
             COUNT(*) 
             FROM habitacion 
-            WHERE estado = 'Ocupado';
+            WHERE estado = 'Ocupado' AND activo = TRUE;
         """
 
         res = self.obtener_un_registro(consulta)
@@ -157,7 +159,8 @@ class HabitacionDAO(BaseDAO):
     def eliminar_habitacion(self, id_habitacion: int) -> None:
 
         consulta = """
-            DELETE FROM habitacion
+            UPDATE habitacion
+            SET activo = FALSE
             WHERE id_habitacion = %s
         """
 

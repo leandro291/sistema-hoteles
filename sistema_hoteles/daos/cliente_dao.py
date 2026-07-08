@@ -37,6 +37,7 @@ class ClienteDAO(BaseDAO):
                 correo,
                 direccion
             FROM cliente
+            WHERE activo = TRUE
         """
 
         return self.obtener_varios_datos(consulta)
@@ -47,6 +48,7 @@ class ClienteDAO(BaseDAO):
             SELECT  
             COUNT(*) 
             FROM cliente 
+            WHERE activo = TRUE
         """
 
         res = self.obtener_un_registro(consulta)
@@ -82,7 +84,7 @@ class ClienteDAO(BaseDAO):
     
     def eliminar_cliente(self, id_cliente: int) -> None:
         
-        consulta = "DELETE FROM cliente WHERE id_cliente = %s;"
+        consulta = "UPDATE cliente SET activo = FALSE WHERE id_cliente = %s;"
         
         self.eliminar_dato_por_id(consulta, id_cliente)
     
