@@ -33,7 +33,7 @@ Sigue estos pasos para desplegar el sistema en tu entorno local:
 ### 1. Clonar el repositorio
 ```bash
 git clone [https://github.com/leandro291/sistema-hoteles.git](https://github.com/leandro291/sistema-hoteles.git)
-cd sistema_hoteles
+cd sistema-hoteles/sistema_hoteles
 ```
 ### 2. Crear y activar un entorno virtual
 
